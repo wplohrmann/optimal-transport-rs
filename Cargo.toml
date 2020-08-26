@@ -1,0 +1,17 @@
+[package]
+name = "optimal-transport-rs"
+version = "0.1.0"
+authors = ["Andrew Ruxton <aruxton@oni.bio>", "Darsh Kodwani <dkodwani@oni.bio>", "Haraman Johal <haramansjohal@gmail.com>", "William Lohrmann <wlohrmann@oni.bio>"]
+license-file = "LICENSE"
+edition = "2018"
+description = "Fast optimal transport library with Python bindings"
+homepage = "https://github.com/wplohrmann/optimal-transport-rs"
+documentation = "https://github.com/wplohrmann/optimal-transport-rs"
+repository = "https://github.com/wplohrmann/optimal-transport-rs"
+readme = "README.md"
+keywords = ["optimal transport", "wasserstein", "sinkhorn"]
+category = "algorithm"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
