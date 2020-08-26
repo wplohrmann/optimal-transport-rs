@@ -1,3 +1,3 @@
-from optimal_transport_rs.optimal_transport_rs import hello
+from optimal_transport.rust import hello
 
 hello()
