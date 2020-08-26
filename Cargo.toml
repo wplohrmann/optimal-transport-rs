@@ -9,7 +9,7 @@ homepage = "https://github.com/wplohrmann/optimal-transport-rs"
 documentation = "https://github.com/wplohrmann/optimal-transport-rs"
 repository = "https://github.com/wplohrmann/optimal-transport-rs"
 readme = "README.md"
-keywords = ["optimal transport", "wasserstein", "sinkhorn"]
+keywords = ["optimal", "transport", "wasserstein", "sinkhorn"]
 category = "algorithm"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
