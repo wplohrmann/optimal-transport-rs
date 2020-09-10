@@ -6,5 +6,6 @@ setup(
     version="0.1",
     rust_extensions=[RustExtension("optimal_transport.rust", binding=Binding.PyO3, debug=False)],
     packages=["optimal_transport"],
+    install_requires=["numpy", "matplotlib"],
     zip_safe=False,
 )
