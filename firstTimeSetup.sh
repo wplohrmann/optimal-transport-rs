@@ -1,6 +1,11 @@
 set -e
 
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+if [ "$( which cargo )" == "" ]; then
+    sudo curl -s https://sh.rustup.rs -sSf -o rustupinstaller.sh
+    sh rustupinstaller.sh -y
+    sudo rm rustupinstaller.sh
+    export PATH="$HOME/.cargo/bin:$PATH"
+fi
 
 rm -rf venv
 python3 -m venv venv
