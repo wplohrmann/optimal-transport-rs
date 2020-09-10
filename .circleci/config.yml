@@ -1,0 +1,19 @@
+version: 2.1
+
+jobs:
+  build-and-test:
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - checkout
+      - run:
+          name: install dependencies
+          command: ./firstTimeSetup.sh
+      - run:
+          name: run tests
+          command: ./commitBuild.sh
+
+workflows:
+  main:
+    jobs:
+      - build-and-test
