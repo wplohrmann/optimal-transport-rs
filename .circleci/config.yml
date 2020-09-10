@@ -8,13 +8,10 @@ jobs:
       - checkout
       - run:
           name: install dependencies
-          command: |
-            ./firstTimeSetup.sh
+          command: ./firstTimeSetup.sh
       - run:
           name: run tests
-          command: |
-            source venv/bin/activate
-            python setup.py develop
+          command: ./commitBuild.sh
 
 workflows:
   main:
