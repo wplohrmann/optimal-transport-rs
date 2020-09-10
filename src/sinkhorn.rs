@@ -14,8 +14,17 @@ pub fn sinkhorn(a: Array1< f32 >, b: Array1< f32 >, cost: Array2< f32 >, reg: f3
     while (u.clone()-P.sum_axis(Axis(1))).mapv( |x: f32| FloatOrd(x.abs())).iter().max().unwrap() > &epsilon
     {
         u = P.sum_axis(Axis(1));
-        P = P * (a.clone() / u.clone()).broadcast((n, m)).unwrap();
-        P = P * (b.clone() / P.sum_axis(Axis(0))).broadcast((n, m)).unwrap();
+        for i in 0..n {
+            for j in 0..m {
+                P[[i, j]] *= a[i] / u[i];
+            }
+        }
+        let v = P.sum_axis(Axis(0));
+        for i in 0..n {
+            for j in 0..m {
+                P[[i, j]] *= b[i] / v[i];
+            }
+        }
     }
     P
 }

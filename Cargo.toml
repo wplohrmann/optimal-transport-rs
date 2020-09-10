@@ -18,6 +18,7 @@ categories = ["algorithm"]
 pyo3 = "0.11.1"
 ndarray = "0.13.1"
 float-ord = "0.2.0"
+numpy = "0.11.0"
 
 [lib]
 name = "optimal_transport_rs"
