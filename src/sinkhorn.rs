@@ -11,7 +11,7 @@ pub fn sinkhorn(a: Array1< f32 >, b: Array1< f32 >, cost: Array2< f32 >, reg: f3
     P /= P.sum();
 
     let mut u = Array1::zeros(n);
-    while (u.clone()-P.sum_axis(Axis(1))).mapv( |x: f32| FloatOrd(x.abs())).iter().max().unwrap() > &epsilon
+    while (u -P.sum_axis(Axis(1))).mapv( |x: f32| FloatOrd(x.abs())).iter().max().unwrap() > &epsilon
     {
         u = P.sum_axis(Axis(1));
         for i in 0..n {
