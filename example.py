@@ -27,7 +27,7 @@ plt.subplot(212)
 plt.imshow(transport_plan)
 plt.show()
 
-scale = 1000
+scale = 10000
 a_ = np.round(a * scale).astype(np.int32)
 b_ = np.round(b * scale).astype(np.int32)
 c_ = np.round(c * scale).astype(np.int32)
