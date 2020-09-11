@@ -1,6 +1,6 @@
 [package]
 name = "optimal-transport"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Andrew Ruxton <aruxton@oni.bio>", "Darsh Kodwani <dkodwani@oni.bio>", "Haraman Johal <haramansjohal@gmail.com>", "William Lohrmann <wlohrmann@oni.bio>"]
 license-file = "LICENSE"
 edition = "2018"
