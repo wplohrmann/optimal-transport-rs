@@ -1,7 +1,8 @@
 /target
 build
 dist
-*.so
+rust.cpython-36m-x86_64-linux-gnu.so
 __pycache__
 venv
 Cargo.lock
+optimal_transport.egg-info
