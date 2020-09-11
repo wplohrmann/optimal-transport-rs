@@ -1,4 +1,4 @@
-from optimal_transport.rust import sinkhorn
+from optimal_transport.rust import sinkhorn, calculate_1D_ot
 from time import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,4 +25,15 @@ plt.plot(xb, transport_plan.sum(0), "x")
 plt.plot(xb, b)
 plt.subplot(212)
 plt.imshow(transport_plan)
+plt.show()
+
+scale = 1000
+a_ = np.round(a * scale).astype(np.int32)
+b_ = np.round(b * scale).astype(np.int32)
+c_ = np.round(c * scale).astype(np.int32)
+cost, discrete_plan = calculate_1D_ot(a_, b_, c_)
+plt.subplot(211)
+plt.imshow(transport_plan)
+plt.subplot(212)
+plt.imshow(discrete_plan)
 plt.show()

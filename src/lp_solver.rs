@@ -1,20 +1,7 @@
 use ndarray::{Array, Array1, Array2, array};
 use mcmf::{GraphBuilder, Vertex, Cost, Capacity};
 
-fn main() {
-    let a = array![1, 2, 3];
-    let b = array![2, 2, 2];
-    let cost = array![[0, 0, 0], [0, 0, 0], [3, 3, 0]];
-    let (transport_cost, transport_plan) = calculate_1D_ot(&a, &b, &cost);
-    println!("from: {}", a);
-    println!("to: {}", b);
-    println!("transport plan:");
-    println!("{:?}", transport_plan);
-    println!("transport cost:");
-    println!("{:?}", transport_cost);
-}
-
-fn calculate_1D_ot(a: &Array1::<i32>, b: &Array1::<i32>, cost: &Array2::<i32>) -> (i32, Array2::<u32>) {
+pub fn calculate_1D_ot(a: &Array1::<i32>, b: &Array1::<i32>, cost: &Array2::<i32>) -> (i32, Array2::<u32>) {
     let mut graph = GraphBuilder::new();
 
     for (i, a_value) in a.iter().enumerate() {
