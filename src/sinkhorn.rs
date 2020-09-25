@@ -1,7 +1,7 @@
-use ndarray::{Array1, Array2, Axis};
+use ndarray::{Array1, Array2, Axis, ArrayView1, ArrayView2};
 use float_ord::FloatOrd;
 
-pub fn sinkhorn(a: Array1< f32 >, b: Array1< f32 >, cost: Array2< f32 >, reg: f32) -> Array2< f32 >
+pub fn sinkhorn(a: &ArrayView1< f32 >, b: &ArrayView1< f32 >, cost: &ArrayView2< f32 >, reg: f32) -> Array2< f32 >
 {
     let n = cost.nrows();
     let m = cost.ncols();
