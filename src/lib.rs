@@ -32,6 +32,7 @@ fn greenkhorn(py: Python<'_>, a: PyReadonlyArray1<f32>, b: PyReadonlyArray1<f32>
 #[pymodule]
 fn rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(sinkhorn))?;
+    m.add_wrapped(wrap_pyfunction!(greenkhorn))?;
     m.add_wrapped(wrap_pyfunction!(calculate_1D_ot))?;
 
     Ok(())
