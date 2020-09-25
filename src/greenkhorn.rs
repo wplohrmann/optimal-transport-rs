@@ -74,15 +74,15 @@ impl ProjectionDistance
         ProjectionDistance{row_rho, col_rho, row_distances, col_distances}
     }
 
-    pub fn eval(&self) -> FloatOrd<f32>
+    pub fn eval(&self) -> f32
     {
-        FloatOrd(self.row_distances.sum() + self.col_distances.sum())
+        self.row_distances.sum() + self.col_distances.sum()
     }
 }
 
 pub fn greenkhorn(r: &ArrayView1< f32 >, c: &ArrayView1<f32>, cost: &ArrayView2< f32 >, reg: f32) -> Array2< f32 >
 {
-    let eps = FloatOrd(1e-8);
+    let eps = 1e-8;
     let mut solution = SinkhornProjection::new(cost, reg);
     let mut solution_distance = ProjectionDistance::new(&solution, r, c);
 
