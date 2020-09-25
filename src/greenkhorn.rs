@@ -78,6 +78,14 @@ impl ProjectionDistance
     {
         self.row_distances.sum() + self.col_distances.sum()
     }
+
+    pub fn update_row(&mut self, row_index: usize, r: &ArrayView1<f32>)
+    {
+    }
+
+    pub fn update_col(&mut self, col_index: usize, c: &ArrayView1<f32>)
+    {
+    }
 }
 
 pub fn greenkhorn(r: &ArrayView1< f32 >, c: &ArrayView1<f32>, cost: &ArrayView2< f32 >, reg: f32) -> Array2< f32 >
@@ -93,12 +101,12 @@ pub fn greenkhorn(r: &ArrayView1< f32 >, c: &ArrayView1<f32>, cost: &ArrayView2<
         if max_row.1 > max_col.1
         {
             solution.update_row(max_row.0, r);
-            // solution_distance.update_row(max_row.0, r);
+            solution_distance.update_row(max_row.0, r);
         }
         else
         {
             solution.update_col(max_col.0, c);
-            // solution_distance.update_col(max_col.0, c);
+            solution_distance.update_col(max_col.0, c);
         }
     }
     solution.p
