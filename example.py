@@ -1,4 +1,4 @@
-from optimal_transport.rust import sinkhorn, calculate_1D_ot
+from optimal_transport.rust import greenkhorn, calculate_1D_ot
 from time import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ c = (xb[np.newaxis,:] - xa[:,np.newaxis])**2
 reg = 0.01
 
 t0 = time()
-transport_plan = sinkhorn(a, b, c, reg)
+transport_plan = greenkhorn(a, b, c, reg)
 print("Optimal transport computed in", time() - t0)
 
 plt.subplot(211)
