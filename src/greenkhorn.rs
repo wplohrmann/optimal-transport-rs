@@ -74,6 +74,16 @@ impl ProjectionDistance
         ProjectionDistance{row_rho, col_rho, row_distances, col_distances}
     }
 
+    pub fn max_row(&self) -> (usize, f32)
+    {
+        self.row_rho.iter().cloned().enumerate().max_by_key(|(i, val)| FloatOrd(*val)).unwrap()
+    }
+
+    pub fn max_col(&self) -> (usize, f32)
+    {
+        self.col_rho.iter().cloned().enumerate().max_by_key(|(i, val)| FloatOrd(*val)).unwrap()
+    }
+
     pub fn eval(&self) -> f32
     {
         self.row_distances.sum() + self.col_distances.sum()
@@ -96,8 +106,8 @@ pub fn greenkhorn(r: &ArrayView1< f32 >, c: &ArrayView1<f32>, cost: &ArrayView2<
 
     while solution_distance.eval() > eps
     {
-        let max_row = (0, 1.); // solution_distance.max_row();
-        let max_col = (0, 1.); // solution_distance.max_col();
+        let max_row = solution_distance.max_row();
+        let max_col = solution_distance.max_col();
         if max_row.1 > max_col.1
         {
             solution.update_row(max_row.0, r);
