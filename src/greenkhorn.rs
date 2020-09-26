@@ -11,17 +11,27 @@ struct SinkhornProjection
     pub p: Array2<f32>,
     row_sum: Array1<f32>,
     col_sum: Array1<f32>,
+    row_rho: Array1<f32>,
+    col_rho: Array1<f32>,
+    row_distances: Array1<f32>,
+    col_distances: Array1<f32>
 }
 
 impl SinkhornProjection
 {
-    pub fn new(cost: &ArrayView2<f32>, reg: f32) -> Self
+    pub fn new(r: &ArrayView1<f32>, c: &ArrayView1<f32>, cost: &ArrayView2<f32>, reg: f32) -> Self
     {
         let mut p = cost.mapv(|x| (-x / reg).exp());
         p /= p.sum();
         let row_sum = p.sum_axis(Axis(1));
         let col_sum = p.sum_axis(Axis(0));
-        SinkhornProjection{p, row_sum, col_sum}
+
+        let row_rho = Zip::from(&row_sum).and(r).apply_collect(|a, b| rho(*a, *b));
+        let col_rho = Zip::from(&col_sum).and(c).apply_collect(|a, b| rho(*a, *b));
+
+        let row_distances = Zip::from(&row_sum).and(r).apply_collect(|a, b| (a-b).abs());
+        let col_distances = Zip::from(&col_sum).and(c).apply_collect(|a, b| (a-b).abs());
+        SinkhornProjection{p, row_sum, col_sum, row_rho, col_rho, row_distances, col_distances}
     }
 
     pub fn update_row(&mut self, row_index: usize, r: &ArrayView1<f32>)
@@ -35,6 +45,12 @@ impl SinkhornProjection
 
         self.col_sum += &diff;
         self.row_sum[row_index] = new_val;
+
+        self.row_rho[row_index] = 0.0;
+        self.row_distances[row_index] = 0.0;
+
+        self.col_rho += 5.;
+        self.col_distances += 5.;
 
     }
 
@@ -51,28 +67,6 @@ impl SinkhornProjection
         self.col_sum[col_index] = new_val;
 
     }
-}
-
-struct ProjectionDistance
-{
-    row_rho: Array1<f32>,
-    col_rho: Array1<f32>,
-    row_distances: Array1<f32>,
-    col_distances: Array1<f32>
-}
-
-impl ProjectionDistance
-{
-    pub fn new(projection: &SinkhornProjection, r: &ArrayView1<f32>, c: &ArrayView1<f32>) -> Self
-    {
-        let row_rho = Zip::from(&projection.row_sum).and(r).apply_collect(|a, b| rho(*a, *b));
-        let row_distances = Zip::from(&projection.row_sum).and(r).apply_collect(|a, b| (a-b).abs());
-
-        let col_rho = Zip::from(&projection.col_sum).and(c).apply_collect(|a, b| rho(*a, *b));
-        let col_distances = Zip::from(&projection.col_sum).and(c).apply_collect(|a, b| (a-b).abs());
-
-        ProjectionDistance{row_rho, col_rho, row_distances, col_distances}
-    }
 
     pub fn max_row(&self) -> (usize, f32)
     {
@@ -84,39 +78,28 @@ impl ProjectionDistance
         self.col_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap()
     }
 
-    pub fn eval(&self) -> f32
+    pub fn distance(&self) -> f32
     {
         self.row_distances.sum() + self.col_distances.sum()
-    }
-
-    pub fn update_row(&mut self, row_index: usize, r: &ArrayView1<f32>)
-    {
-    }
-
-    pub fn update_col(&mut self, col_index: usize, c: &ArrayView1<f32>)
-    {
     }
 }
 
 pub fn greenkhorn(r: &ArrayView1< f32 >, c: &ArrayView1<f32>, cost: &ArrayView2< f32 >, reg: f32) -> Array2< f32 >
 {
     let eps = 1e-8;
-    let mut solution = SinkhornProjection::new(cost, reg);
-    let mut solution_distance = ProjectionDistance::new(&solution, r, c);
+    let mut solution = SinkhornProjection::new(r, c, cost, reg);
 
-    while solution_distance.eval() > eps
+    while solution.distance() > eps
     {
-        let max_row = solution_distance.max_row();
-        let max_col = solution_distance.max_col();
+        let max_row = solution.max_row();
+        let max_col = solution.max_col();
         if max_row.1 > max_col.1
         {
             solution.update_row(max_row.0, r);
-            solution_distance.update_row(max_row.0, r);
         }
         else
         {
             solution.update_col(max_col.0, c);
-            solution_distance.update_col(max_col.0, c);
         }
     }
     solution.p
