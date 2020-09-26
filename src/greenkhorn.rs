@@ -76,12 +76,12 @@ impl ProjectionDistance
 
     pub fn max_row(&self) -> (usize, f32)
     {
-        self.row_rho.iter().cloned().enumerate().max_by_key(|(i, val)| FloatOrd(*val)).unwrap()
+        self.row_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap()
     }
 
     pub fn max_col(&self) -> (usize, f32)
     {
-        self.col_rho.iter().cloned().enumerate().max_by_key(|(i, val)| FloatOrd(*val)).unwrap()
+        self.col_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap()
     }
 
     pub fn eval(&self) -> f32
