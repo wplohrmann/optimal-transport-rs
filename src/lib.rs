@@ -9,6 +9,7 @@ mod lp_solver;
 
 use sinkhorn::sinkhorn as impl_sinkhorn;
 use greenkhorn::greenkhorn as impl_greenkhorn;
+use greenkhorn::{Row, Col};
 use lp_solver::calculate_1D_ot as impl_calculate_1D_ot;
 
 #[pyfunction]
@@ -25,7 +26,7 @@ fn sinkhorn(py: Python<'_>, a: PyReadonlyArray1<f32>, b: PyReadonlyArray1<f32>, 
 
 #[pyfunction]
 fn greenkhorn(py: Python<'_>, a: PyReadonlyArray1<f32>, b: PyReadonlyArray1<f32>, cost: PyReadonlyArray2<f32>, reg: f32) -> PyResult<Py<PyArray2<f32>>> {
-   let transport_plan = impl_greenkhorn(&a.as_array(), &b.as_array(), &cost.as_array(), reg);
+   let transport_plan = impl_greenkhorn(&Row(a.as_array()), &Col(b.as_array()), &cost.as_array(), reg);
    Ok(transport_plan.into_pyarray(py).to_owned())
 }
 

@@ -1,110 +1,102 @@
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, s, Zip};
 use float_ord::FloatOrd;
 
-fn rho(a: f32, b: f32) -> f32
-{
-    b - a + a * (a/b).log2()
-}
 
 struct SinkhornProjection
 {
     pub p: Array2<f32>,
-    row_sum: Array1<f32>,
-    col_sum: Array1<f32>,
-    row_rho: Array1<f32>,
-    col_rho: Array1<f32>,
-    row_distances: Array1<f32>,
-    col_distances: Array1<f32>
+    row_sum: Row<Array1<f32>>,
+    col_sum: Col<Array1<f32>>,
 }
 
 impl SinkhornProjection
 {
-    pub fn new(r: &ArrayView1<f32>, c: &ArrayView1<f32>, cost: &ArrayView2<f32>, reg: f32) -> Self
+    pub fn new(r: &Row<ArrayView1<f32>>, c: &Col<ArrayView1<f32>>, cost: &ArrayView2<f32>, reg: f32) -> Self
     {
         let mut p = cost.mapv(|x| (-x / reg).exp());
         p /= p.sum();
-        let row_sum = p.sum_axis(Axis(1));
-        let col_sum = p.sum_axis(Axis(0));
+        let row_sum = Row(p.sum_axis(Axis(1)));
+        let col_sum = Col(p.sum_axis(Axis(0)));
 
-        let row_rho = Zip::from(r).and(&row_sum).apply_collect(|a, b| rho(*a, *b));
-        let col_rho = Zip::from(c).and(&col_sum).apply_collect(|a, b| rho(*a, *b));
-
-        let row_distances = Zip::from(&row_sum).and(r).apply_collect(|a, b| (a-b).abs());
-        let col_distances = Zip::from(&col_sum).and(c).apply_collect(|a, b| (a-b).abs());
-        SinkhornProjection{p, row_sum, col_sum, row_rho, col_rho, row_distances, col_distances}
+        SinkhornProjection{p, row_sum, col_sum}
     }
 
-    pub fn update_row(&mut self, row_index: usize, r: &ArrayView1<f32>, c: &ArrayView1<f32>)
+    pub fn update_row(&mut self, row_index: usize, r: &Row<ArrayView1<f32>>)
     {
-        let new_val = r[row_index];
-        let ratio: f32 = new_val / self.row_sum[row_index];
+        let new_val = r.0[row_index];
+        let ratio: f32 = new_val / self.row_sum.0[row_index];
 
         let mut slice = self.p.slice_mut(s![row_index, ..]);
         let diff: Array1<f32> = ratio - &slice;
         slice *= ratio;
 
-        self.row_rho[row_index] = 0.0;
-        self.row_distances[row_index] = 0.0;
+        self.col_sum.0 += &diff;
+        self.row_sum.0[row_index] = new_val;
 
-        self.col_sum += &diff;
-        self.row_sum[row_index] = new_val;
-
-        self.col_rho = Zip::from(c).and(&self.col_sum).apply_collect(|a, b| rho(*a, *b));
-        self.col_distances = Zip::from(&self.col_sum).and(c).apply_collect(|a, b| (a-b).abs());
     }
 
-    pub fn update_col(&mut self, col_index: usize, c: &ArrayView1<f32>, r: &ArrayView1<f32>)
+    pub fn update_col(&mut self, col_index: usize, c: &Col<ArrayView1<f32>>)
     {
-        let new_val = c[col_index];
-        let ratio: f32 = new_val / self.col_sum[col_index];
+        let new_val = c.0[col_index];
+        let ratio: f32 = new_val / self.col_sum.0[col_index];
 
         let mut slice = self.p.slice_mut(s![.., col_index]);
         let diff: Array1<f32> = ratio - &slice;
         slice *= ratio;
 
-        self.col_rho[col_index] = 0.0;
-        self.col_distances[col_index] = 0.0;
+        self.row_sum.0 += &diff;
+        self.col_sum.0[col_index] = new_val;
 
-        self.row_sum += &diff;
-        self.col_sum[col_index] = new_val;
-
-        self.row_rho = Zip::from(r).and(&self.row_sum).apply_collect(|a, b| rho(*a, *b));
-        self.row_distances = Zip::from(&self.row_sum).and(r).apply_collect(|a, b| (a-b).abs());
     }
 
-    pub fn max_row(&self) -> (usize, f32)
+    pub fn distance_row(&self, row: &Row<ArrayView1<f32>>, distance_func: impl Fn(&f32, &f32) -> f32) -> Array1<f32>
     {
-        self.row_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap()
+        Zip::from(&row.0).and(&self.row_sum.0).apply_collect(distance_func)
     }
 
-    pub fn max_col(&self) -> (usize, f32)
+    pub fn distance_col(&self, col: &Col<ArrayView1<f32>>, distance_func: impl Fn(&f32, &f32) -> f32) -> Array1<f32>
     {
-        self.col_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap()
-    }
-
-    pub fn distance(&self) -> f32
-    {
-        self.row_distances.sum() + self.col_distances.sum()
+        Zip::from(&col.0).and(&self.col_sum.0).apply_collect(distance_func)
     }
 }
 
-pub fn greenkhorn(r: &ArrayView1< f32 >, c: &ArrayView1<f32>, cost: &ArrayView2< f32 >, reg: f32) -> Array2< f32 >
+pub struct Row<T> (pub T);
+pub struct Col<T> (pub T);
+
+pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &ArrayView2< f32 >, reg: f32) -> Array2< f32 >
 {
     let eps = 1e-8;
     let mut solution = SinkhornProjection::new(r, c, cost, reg);
+    let abs = |a: &f32, b: &f32| (a-b).abs();
+    let rho = |a: &f32, b: &f32| b - a + a * (a/b).log2();
 
-    // while solution.distance() > eps
-    for _ in 0..10000
+    let mut row_rho = solution.distance_row(r, rho);
+    let mut col_rho = solution.distance_col(c, rho);
+
+    let mut row_distances = solution.distance_row(r, abs);
+    let mut col_distances = solution.distance_col(c, abs);
+
+    while row_distances.sum() + col_distances.sum() > eps
     {
-        let max_row = solution.max_row();
-        let max_col = solution.max_col();
+        let max_row = row_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap();
+        let max_col = col_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap();
         if max_row.1 > max_col.1
         {
-            solution.update_row(max_row.0, r, c);
+            let index = max_row.0;
+            solution.update_row(index, r);
+            row_rho[index] = 0.0;
+            row_distances[index] = 0.0;
+            col_rho = solution.distance_col(c, rho);
+            col_distances = solution.distance_col(c, abs);
         }
         else
         {
-            solution.update_col(max_col.0, c, r);
+            let index = max_col.0;
+            solution.update_col(index, c);
+            col_rho[index] = 0.0;
+            col_distances[index] = 0.0;
+            row_rho = solution.distance_row(r, rho);
+            row_distances = solution.distance_row(r, abs);
         }
     }
     solution.p
