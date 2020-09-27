@@ -11,7 +11,7 @@ struct SinkhornProjection
 
 impl SinkhornProjection
 {
-    pub fn new(r: &Row<ArrayView1<f32>>, c: &Col<ArrayView1<f32>>, cost: &ArrayView2<f32>, reg: f32) -> Self
+    pub fn new(cost: &ArrayView2<f32>, reg: f32) -> Self
     {
         let mut p = cost.mapv(|x| (-x / reg).exp());
         p /= p.sum();
@@ -65,8 +65,7 @@ pub struct Col<T> (pub T);
 
 pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &ArrayView2< f32 >, reg: f32) -> Array2< f32 >
 {
-    let eps = 1e-8;
-    let mut solution = SinkhornProjection::new(r, c, cost, reg);
+    let mut solution = SinkhornProjection::new(cost, reg);
     let abs = |a: &f32, b: &f32| (a-b).abs();
     let rho = |a: &f32, b: &f32| b - a + a * (a/b).log2();
 
@@ -76,8 +75,10 @@ pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &A
     let mut row_distances = solution.distance_row(r, abs);
     let mut col_distances = solution.distance_col(c, abs);
 
-    while row_distances.sum() + col_distances.sum() > eps
+    while row_distances.sum() + col_distances.sum() > 2.
+    // for _ in 0..10000
     {
+        dbg!(row_distances.sum() + col_distances.sum());
         let max_row = row_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap();
         let max_col = col_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap();
         if max_row.1 > max_col.1
@@ -100,4 +101,16 @@ pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &A
         }
     }
     solution.p
+}
+
+#[cfg(test)]
+mod tests
+{
+    use quickcheck_macros::quickcheck;
+
+    #[quickcheck]
+    fn it_works(a: f32, b: f32)
+    {
+        assert_eq!(b+a, a+b);
+    }
 }
