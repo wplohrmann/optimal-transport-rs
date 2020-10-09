@@ -1,11 +1,9 @@
 use ndarray::{Array1, Array2, Axis, ArrayView1, ArrayView2};
-use float_ord::FloatOrd;
 
 pub fn sinkhorn(a: &ArrayView1< f32 >, b: &ArrayView1< f32 >, cost: &ArrayView2< f32 >, reg: f32) -> Array2< f32 >
 {
     let n = cost.nrows();
     let m = cost.ncols();
-    let epsilon = FloatOrd(1e-8);
 
     let mut p = cost.mapv( |x| (-x / reg).exp());
 
