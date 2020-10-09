@@ -75,8 +75,7 @@ pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &A
     let mut row_distances = solution.distance_row(r, abs);
     let mut col_distances = solution.distance_col(c, abs);
 
-    while row_distances.sum() + col_distances.sum() > 2.
-    // for _ in 0..10000
+    for _ in 0..10000
     {
         dbg!(row_distances.sum() + col_distances.sum());
         let max_row = row_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap();
@@ -107,10 +106,32 @@ pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &A
 mod tests
 {
     use quickcheck_macros::quickcheck;
+    use ndarray::Array2;
+    use super::*;
 
     #[quickcheck]
-    fn it_works(a: f32, b: f32)
+    fn it_works(row: Vec<f32>, col: Vec<f32>)
     {
-        assert_eq!(b+a, a+b);
+        if row.len() > 0 && col.len() > 0 && row.iter().sum::<f32>() > 0_f32 && col.iter().sum::<f32>() > 0_f32
+        {
+            let row_raw = Array1::from(row.iter().copied().map(f32::abs).collect::<Vec<f32>>());
+            let col_raw = Array1::from(col.iter().copied().map(f32::abs).collect::<Vec<f32>>());
+            let mut cost = Array2::zeros((row_raw.len(), col_raw.len()));
+            for i in 0..row.len()
+            {
+                for j in 0..col.len()
+                {
+                    cost[[i,j]] = (i as f32 -j as f32).abs();
+                }
+            }
+            let reg = 0.01;
+            let mut solution = SinkhornProjection::new(&cost.view(), reg);
+            assert_eq!(solution.row_sum.0.len(), row_raw.len());
+            assert_eq!(solution.col_sum.0.len(), col_raw.len());
+            assert_eq!(solution.p.sum_axis(Axis(1)), solution.row_sum.0);
+            assert_eq!(solution.p.sum_axis(Axis(0)), solution.col_sum.0);
+            // solution.update_row(0, &Row(row_raw.view()));
+            // assert_eq!(solution.p.sum_axis(Axis(1)), solution.row_sum.0);
+        }
     }
 }
