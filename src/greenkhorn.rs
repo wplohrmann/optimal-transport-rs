@@ -110,7 +110,6 @@ pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &A
             col_distances = solution.distance_col(c, abs);
         }
     }
-    dbg!(row_rho, col_rho, row_distances, col_distances);
     solution.p
 }
 
