@@ -34,7 +34,8 @@ impl SinkhornProjection
         self.row_sum.0[row_index] = new_val;
 
         self.col_sum.0 = self.p.sum_axis(Axis(0));
-        self.row_sum.0 = self.p.sum_axis(Axis(1));
+        // self.row_sum.0 = self.p.sum_axis(Axis(1));
+
         // debug_assert_eq!(self.col_sum.0, self.p.sum_axis(Axis(0)));
         // debug_assert_eq!(self.row_sum.0, self.p.sum_axis(Axis(1)));
 
@@ -54,7 +55,7 @@ impl SinkhornProjection
 
         // debug_assert_eq!(self.col_sum.0, self.p.sum_axis(Axis(0)));
         // debug_assert_eq!(self.row_sum.0, self.p.sum_axis(Axis(1)));
-        self.col_sum.0 = self.p.sum_axis(Axis(0));
+        // self.col_sum.0 = self.p.sum_axis(Axis(0));
         self.row_sum.0 = self.p.sum_axis(Axis(1));
 
     }
