@@ -77,7 +77,7 @@ pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &A
 {
     let mut solution = SinkhornProjection::new(cost, reg);
     let abs = |a: &f32, b: &f32| (a-b).abs();
-    let rho = |a: &f32, b: &f32| (b - a + a * (a/b).log2()).abs();
+    let rho = |a: &f32, b: &f32| (b - a + a * (a/b).ln()).abs();
 
     let mut row_rho = solution.distance_row(r, rho);
     let mut col_rho = solution.distance_col(c, rho);
@@ -147,10 +147,12 @@ mod tests
     #[quickcheck]
     fn rho_is_nonnegative(a: f32, b: f32)
     {
-        if a > 0. && b > 0. && a <= 1. && b <= 1.
+        let a = a % 1.;
+        let b = b % 1.;
+        if a > 0. && b > 0.
         {
-            let rho = b - a + a * (a/b).log2();
-            dbg!(rho);
+            let rho = b - a + a * (a/b).ln();
+            dbg!(a, b, rho);
             assert!(rho >= 0.);
         }
     }
