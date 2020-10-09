@@ -93,10 +93,10 @@ pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &A
         {
             let index = max_row.0;
             solution.update_row(index, r);
-            row_rho = solution.distance_row(r, rho);
+            row_rho[index] = 0.;
             col_rho = solution.distance_col(c, rho);
 
-            row_distances = solution.distance_row(r, abs);
+            row_distances[index] = 0.;
             col_distances = solution.distance_col(c, abs);
         }
         else
@@ -104,10 +104,10 @@ pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &A
             let index = max_col.0;
             solution.update_col(index, c);
             row_rho = solution.distance_row(r, rho);
-            col_rho = solution.distance_col(c, rho);
+            col_rho[index] = 0.;
 
             row_distances = solution.distance_row(r, abs);
-            col_distances = solution.distance_col(c, abs);
+            col_distances[index] = 0.;
         }
     }
     solution.p
