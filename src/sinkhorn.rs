@@ -10,7 +10,7 @@ pub fn sinkhorn(a: &ArrayView1< f32 >, b: &ArrayView1< f32 >, cost: &ArrayView2<
     let mut p = cost.mapv( |x| (-x / reg).exp());
 
     let mut u = Array1::zeros(n);
-    while (u - p.sum_axis(Axis(1))).mapv( |x: f32| FloatOrd(x.abs())).iter().max().unwrap() > &epsilon
+    while (u - p.sum_axis(Axis(1))).mapv(|x: f32| x.powi(2)).sum() > 1e-3
     {
         u = p.sum_axis(Axis(1));
         for i in 0..n {
