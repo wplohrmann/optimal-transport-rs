@@ -33,6 +33,11 @@ impl SinkhornProjection
         self.col_sum.0 += &diff;
         self.row_sum.0[row_index] = new_val;
 
+        self.col_sum.0 = self.p.sum_axis(Axis(0));
+        self.row_sum.0 = self.p.sum_axis(Axis(1));
+        // debug_assert_eq!(self.col_sum.0, self.p.sum_axis(Axis(0)));
+        // debug_assert_eq!(self.row_sum.0, self.p.sum_axis(Axis(1)));
+
     }
 
     pub fn update_col(&mut self, col_index: usize, c: &Col<ArrayView1<f32>>)
@@ -46,6 +51,11 @@ impl SinkhornProjection
 
         self.row_sum.0 += &diff;
         self.col_sum.0[col_index] = new_val;
+
+        // debug_assert_eq!(self.col_sum.0, self.p.sum_axis(Axis(0)));
+        // debug_assert_eq!(self.row_sum.0, self.p.sum_axis(Axis(1)));
+        self.col_sum.0 = self.p.sum_axis(Axis(0));
+        self.row_sum.0 = self.p.sum_axis(Axis(1));
 
     }
 
@@ -67,7 +77,7 @@ pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &A
 {
     let mut solution = SinkhornProjection::new(cost, reg);
     let abs = |a: &f32, b: &f32| (a-b).abs();
-    let rho = |a: &f32, b: &f32| b - a + a * (a/b).log2();
+    let rho = |a: &f32, b: &f32| (b - a + a * (a/b).log2()).abs();
 
     let mut row_rho = solution.distance_row(r, rho);
     let mut col_rho = solution.distance_col(c, rho);
@@ -75,30 +85,32 @@ pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &A
     let mut row_distances = solution.distance_row(r, abs);
     let mut col_distances = solution.distance_col(c, abs);
 
-    for _ in 0..10000
+    while (row_distances.sum() + col_distances.sum()) > 1e-3
     {
-        dbg!(row_distances.sum() + col_distances.sum());
         let max_row = row_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap();
         let max_col = col_rho.iter().cloned().enumerate().max_by_key(|(_, val)| FloatOrd(*val)).unwrap();
         if max_row.1 > max_col.1
         {
             let index = max_row.0;
             solution.update_row(index, r);
-            row_rho[index] = 0.0;
-            row_distances[index] = 0.0;
+            row_rho = solution.distance_row(r, rho);
             col_rho = solution.distance_col(c, rho);
+
+            row_distances = solution.distance_row(r, abs);
             col_distances = solution.distance_col(c, abs);
         }
         else
         {
             let index = max_col.0;
             solution.update_col(index, c);
-            col_rho[index] = 0.0;
-            col_distances[index] = 0.0;
             row_rho = solution.distance_row(r, rho);
+            col_rho = solution.distance_col(c, rho);
+
             row_distances = solution.distance_row(r, abs);
+            col_distances = solution.distance_col(c, abs);
         }
     }
+    dbg!(row_rho, col_rho, row_distances, col_distances);
     solution.p
 }
 
@@ -114,8 +126,8 @@ mod tests
     {
         if row.len() > 0 && col.len() > 0 && row.iter().sum::<f32>() > 0_f32 && col.iter().sum::<f32>() > 0_f32
         {
-            let row_raw = Array1::from(row.iter().copied().map(f32::abs).collect::<Vec<f32>>());
-            let col_raw = Array1::from(col.iter().copied().map(f32::abs).collect::<Vec<f32>>());
+            let row_raw = {let x = Array1::from(row.iter().copied().map(f32::abs).collect::<Vec<f32>>()); &x / x.sum()};
+            let col_raw = {let x = Array1::from(col.iter().copied().map(f32::abs).collect::<Vec<f32>>()); &x / x.sum()};
             let mut cost = Array2::zeros((row_raw.len(), col_raw.len()));
             for i in 0..row.len()
             {
@@ -128,10 +140,19 @@ mod tests
             let mut solution = SinkhornProjection::new(&cost.view(), reg);
             assert_eq!(solution.row_sum.0.len(), row_raw.len());
             assert_eq!(solution.col_sum.0.len(), col_raw.len());
-            assert_eq!(solution.p.sum_axis(Axis(1)), solution.row_sum.0);
-            assert_eq!(solution.p.sum_axis(Axis(0)), solution.col_sum.0);
-            // solution.update_row(0, &Row(row_raw.view()));
-            // assert_eq!(solution.p.sum_axis(Axis(1)), solution.row_sum.0);
+
+            solution.update_row(0, &Row(row_raw.view()));
+            solution.update_col(0, &Col(col_raw.view()));
+        }
+    }
+    #[quickcheck]
+    fn rho_is_nonnegative(a: f32, b: f32)
+    {
+        if a > 0. && b > 0. && a <= 1. && b <= 1.
+        {
+            let rho = b - a + a * (a/b).log2();
+            dbg!(rho);
+            assert!(rho >= 0.);
         }
     }
 }
