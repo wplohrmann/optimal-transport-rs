@@ -1,3 +1,4 @@
+from optimal_transport.rust import sinkhorn
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -27,8 +28,9 @@ n = 100
 m = 200
 a = np.ones((n,1))/n
 b = np.ones((1,m))/m
-
-epsilon = 0.01
+a1= a[:,0].astype(np.float32)
+b1 = b[0].astype(np.float32)
+epsilon = 3
 niter = 300
 
 z = np.random.randn(2,n)*.2
@@ -48,11 +50,11 @@ h = np.zeros(2)
 Swap = np.array([[0,-1],[1,0]])
 
 # step size for the descent
-tau_S = 2
+tau_S = 0.03
 tau_h = .4
-tau_theta = 3
+tau_theta = 200
 # #iter for the gradient descent
-giter = 150
+giter = 1500
 ndisp = np.round( np.linspace(0,giter-1,6) )
 kdisp = 0
 f = np.zeros(n)
@@ -66,7 +68,8 @@ for j in range(giter):
         kdisp = kdisp+1
         plt.xlim(-.7,1.3)
         plt.ylim(-.7,.7)
-    (P,Err) = Sinkhorn(distmat(x,y), epsilon,f,niter)
+    #(P,Err) = Sinkhorn(distmat(x,y), epsilon,f,niter)
+    P = sinkhorn(a1, b1, distmat(x,y).astype(np.float32), epsilon)
     v = a.transpose() * x - y.dot(P.transpose())
     A_deriv = Swap@A
     delta_theta = A_deriv@z*S[:,None]
@@ -77,6 +80,6 @@ for j in range(giter):
     theta = theta - tau_theta * nabla_theta
     A = np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
     S = S - tau_S * nabla_S
-    print(S)
+    print(nabla_h)
     h = h - tau_h * nabla_h
 plt.show()
