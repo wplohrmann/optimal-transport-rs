@@ -15,9 +15,15 @@ fn calculate_1D_ot(py: Python<'_>, a: &PyArray1<i32>, b: &PyArray1<i32>, cost: &
 }
 
 #[pyfunction]
-fn sinkhorn(py: Python<'_>, a: &PyArray1<f32>, b: &PyArray1<f32>, cost: &PyArray2<f32>, reg: f32) -> PyResult<Py<PyArray2<f32>>> {
-   let transport_plan = impl_sinkhorn(a.to_owned_array(), b.to_owned_array(), cost.to_owned_array(), reg);
-   Ok(transport_plan.into_pyarray(py).to_owned())
+fn sinkhorn(py: Python<'_>, a: &PyArray1<f32>, b: &PyArray1<f32>, cost: &PyArray2<f32>, reg: f32, maybe_warm_u: Option<&PyArray1<f32>>) -> PyResult<(Py<PyArray2<f32>>, Py<PyArray1<f32>>)> {
+    let warm_u_rs = if let Some(warm_u) = maybe_warm_u {
+       Some(warm_u.to_owned_array())
+    }
+    else{
+       None
+    };
+   let (transport_plan, u) = impl_sinkhorn(a.to_owned_array(), b.to_owned_array(), cost.to_owned_array(), reg, warm_u_rs);
+   Ok((transport_plan.into_pyarray(py).to_owned(), u.into_pyarray(py).to_owned()))
 }
 
 #[pymodule]

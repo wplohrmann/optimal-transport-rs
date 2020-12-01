@@ -1,7 +1,7 @@
 use ndarray::{Array1, Array2, Axis};
 use float_ord::FloatOrd;
 
-pub fn sinkhorn(a: Array1< f32 >, b: Array1< f32 >, cost: Array2< f32 >, reg: f32) -> Array2< f32 >
+pub fn sinkhorn(a: Array1< f32 >, b: Array1< f32 >, cost: Array2< f32 >, reg: f32, warm_u: Option< Array1< f32 > >) -> (Array2< f32 >, Array1< f32 >)
 {
     let n = cost.nrows();
     let m = cost.ncols();
@@ -9,7 +9,7 @@ pub fn sinkhorn(a: Array1< f32 >, b: Array1< f32 >, cost: Array2< f32 >, reg: f3
 
     let mut p = cost.mapv( |x| (-x / reg).exp());
 
-    let mut u = Array1::zeros(n);
+    let mut u = warm_u.unwrap_or(Array1::zeros(n));
     while (u - p.sum_axis(Axis(1))).mapv( |x: f32| FloatOrd(x.abs())).iter().max().unwrap() > &epsilon
     {
         u = p.sum_axis(Axis(1));
@@ -25,5 +25,6 @@ pub fn sinkhorn(a: Array1< f32 >, b: Array1< f32 >, cost: Array2< f32 >, reg: f3
             }
         }
     }
-    p
+    (p, u)
 }
+

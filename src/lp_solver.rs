@@ -1,4 +1,4 @@
-use ndarray::{Array, Array1, Array2, array};
+use ndarray::{Array, Array1, Array2};
 use mcmf::{GraphBuilder, Vertex, Cost, Capacity};
 
 pub fn calculate_1D_ot(a: &Array1::<i32>, b: &Array1::<i32>, cost: &Array2::<i32>) -> (i32, Array2::<u32>) {
