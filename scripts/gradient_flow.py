@@ -36,17 +36,18 @@ niter = 300
 z = np.random.randn(2,n)*.2
 z[1] *= 0.5
 
-z = [[-0.4,-0.2,0,0.2],[0.1,0,0.1,0]]
+z = np.array([[-0.4,-0.2,0,0.2],[0.1,0,0.1,0]])
 
 y = np.random.randn(2,m)*.2
 y = np.random.randn(m//4,2)*.02
 y = np.vstack((y+[0,-0.8],y+[0.2,-0.4],y+[0,0],y+[0.2,0.4])).transpose()
 y[0,:] += 1
 
+rotation_matrix = lambda theta: np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
 
 
 theta = 0
-A = np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
+A = rotation_matrix(theta)
 #S = np.ones(2)
 S = 1
 h = np.zeros(2)
@@ -54,8 +55,8 @@ Swap = np.array([[0,-1],[1,0]])
 
 # step size for the descent
 tau_S = 0.4
-tau_h = 1
-tau_theta = 4
+tau_h = 0.6
+tau_theta = 1.6
 # #iter for the gradient descent
 giter = 200
 ndisp = np.round( np.linspace(0,giter-1,6) )
@@ -81,8 +82,15 @@ for j in range(giter):
     nabla_S = np.sum(delta_S*v)
     nabla_h = np.sum(v,1)
     theta = theta - tau_theta * nabla_theta
-    A = np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
+    A = rotation_matrix(theta)
     S = S - tau_S * nabla_S
     h = h - tau_h * nabla_h
-    print(theta)
+plt.show()
+distance = np.sum(P*distmat(x,y))
+A_1 = rotation_matrix(-theta)
+y_1 = A_1.dot(y-h[:,None])/S
+plotp(y_1, 'r')
+plotp(z, 'b')
+plt.axis('equal')
+plt.title(f'distance {distance}')
 plt.show()
