@@ -74,6 +74,8 @@ impl SinkhornProjection
 pub struct Row<T> (pub T);
 pub struct Col<T> (pub T);
 
+// Near-linear time approximation algorithms for optimal transport via Sinkhorn iteration
+// https://dl.acm.org/doi/10.5555/3294771.3294958
 pub fn greenkhorn(r: &Row<ArrayView1< f32 >>, c: &Col<ArrayView1<f32>>, cost: &ArrayView2< f32 >, reg: f32) -> Array2< f32 >
 {
     let mut solution = SinkhornProjection::new(cost, reg);
