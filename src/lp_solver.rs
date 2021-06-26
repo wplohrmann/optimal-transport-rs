@@ -1,7 +1,7 @@
-use ndarray::{Array, Array1, Array2, array};
+use ndarray::{Array, Array2, ArrayView1, ArrayView2};
 use mcmf::{GraphBuilder, Vertex, Cost, Capacity};
 
-pub fn calculate_1D_ot(a: &Array1::<i32>, b: &Array1::<i32>, cost: &Array2::<i32>) -> (i32, Array2::<u32>) {
+pub fn calculate_1D_ot(a: &ArrayView1::<i32>, b: &ArrayView1::<i32>, cost: &ArrayView2::<i32>) -> (i32, Array2::<u32>) {
     let mut graph = GraphBuilder::new();
 
     for (i, a_value) in a.iter().enumerate() {
